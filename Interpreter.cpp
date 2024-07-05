@@ -1,20 +1,151 @@
-// Interpreter.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
+using namespace std;
+#include <string>
+#include <vector>
+#include <stack>
+
+class Tokens
+{
+    
+    const string functions[4] = { "pow", "abs", "min", "max" };
+    bool isOperator(char symbol)
+    {
+        return (symbol == '+' || symbol == '-' || symbol == '*' || symbol == '/' || symbol == '=');
+    }
+    
+        bool validateParentheses(vector<string> tokens)
+        {
+            stack<string> temp;
+            int count = 0;
+            for (int i = 0; i < tokens.size(); i++)
+            {              
+                    if (tokens[i] == "(")
+                    {
+                        count = 0;
+                        temp.push(tokens[i]);
+
+                    }
+                    else if (!temp.empty() && (temp.top() == "(" && tokens[i] == ")"))
+                    {
+                        if (count % 2 == 0)
+                        {
+                            return false;
+                        }
+                        temp.pop();
+
+                    }
+                    else {
+                        count++;
+                    }
+                   
+            }
+            if (temp.empty())
+            {
+                return true;
+            }
+            return false;
+
+        }
+    
+
+public:
+    vector<string> ParseInput(string input)
+    {
+        vector<string> tokens;
+        int i = 0;
+        while(i < input.length())
+        {
+            if (isdigit(input[i]) || (input[i] == '-' && (i == 0 || !isdigit(input[i - 1]))))
+            {
+                
+                string current_token = "";
+                if (input[i] == '-')
+                {
+                    current_token += input[i];
+                    i++;
+                }
+                while (i < input.length() && (isdigit(input[i]) || input[i] == '.'))
+                {
+                    current_token += input[i];
+                    i++;
+                }
+                tokens.push_back(current_token);
+            }
+            else if (isalpha(input[i]))
+            {
+                bool isFunction = false;
+                for (int j = 0; j < 4; j++)
+                {
+                    if (input.substr(i, functions[j].length()) == functions[j])
+                    {
+                        tokens.push_back(functions[j]);
+                        i += functions[j].length();
+                        isFunction = true;
+                        break;
+                    }                  
+               }
+                if (!isFunction) {
+                    cout << "Invalid input!" << endl;
+                    return {};
+                }
+            }
+            else {
+                if (isOperator(input[i]))
+                {
+                    if (i >= 0 && !isdigit(input[i - 1]) && input[i] != '-')
+                    {
+                        cout << "invalid input !" << endl;
+                        return {};
+                    }
+                    tokens.push_back(string(1, input[i]));
+
+                }
+                else if (input[i] == ')' || input[i] == '(')
+                {
+                    tokens.push_back(string(1, input[i]));
+
+                }
+                else {
+                    cout << "invalid input !" << endl;
+                    return {};
+                }
+                i++;
+            }
+        }
+        if (!validateParentheses(tokens))
+        {
+            cout << "parentheses !" << endl;
+            return {};
+        }
+        return tokens;
+    }
+};
+
+
+
+class ReversePolishNotation
+{
+
+};
+
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    string input;
+    cout << "Enter an expression:" << endl;
+    getline(cin, input);
+    cout << "Echo: " << input << endl;
+    input.erase(remove(input.begin(), input.end(), ' '), input.end());
+    Tokens tokens;
+    vector<string> parts = tokens.ParseInput(input);
+    for (int i = 0; i < parts.size(); i++)
+    {
+        cout << parts[i] << endl;
+    }
+
+
+
+
+
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
