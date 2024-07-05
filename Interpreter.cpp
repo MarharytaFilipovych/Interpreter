@@ -3,50 +3,90 @@ using namespace std;
 #include <string>
 #include <vector>
 #include <stack>
+#include <algorithm>
 
 class Tokens
-{
-    
+{   
     const string functions[4] = { "pow", "abs", "min", "max" };
     bool isOperator(char symbol)
     {
         return (symbol == '+' || symbol == '-' || symbol == '*' || symbol == '/' || symbol == '=');
     }
     
-        bool validateParentheses(vector<string> tokens)
+        bool validateParentheses(vector<string>& tokens)
         {
             stack<string> temp;
             int count = 0;
             for (int i = 0; i < tokens.size(); i++)
             {              
-                    if (tokens[i] == "(")
+                    if (tokens[i] == "(" )
                     {
                         count = 0;
                         temp.push(tokens[i]);
-
                     }
-                    else if (!temp.empty() && (temp.top() == "(" && tokens[i] == ")"))
+                    else if (tokens[i] == ")")
                     {
-                        if (count % 2 == 0)
+                        if (temp.empty() || temp.top() != "(")
+                        {
+                            return false;
+                        }
+                        if (count % 2 == 0 )
                         {
                             return false;
                         }
                         temp.pop();
-
                     }
+                    
                     else {
                         count++;
-                    }
-                   
+                    }                 
             }
             if (temp.empty())
             {
                 return true;
             }
             return false;
-
         }
-    
+        bool validateFunctions(vector<string>& tokens)
+        {
+            int i = 0;
+            while (i < tokens.size())
+            {
+                bool foundFunction = false;
+                for (int j = 0; j < 4; j++)  
+                {
+                    if (tokens[i] == functions[j])
+                    {
+                        foundFunction = true;
+                        if (i + 1 >= tokens.size() || tokens[i + 1] != "(")
+                        {
+                            return false;  
+                        }
+                        i++;
+                        int count = 0;                       
+                        while (i < tokens.size() && tokens[i] != ")")
+                        {
+                            if (tokens[i] == ",")
+                            {
+                                count++;
+                            }
+                            i++;
+                        }                     
+                        if (count != 1)
+                        {
+                            return false;
+                        }
+                       
+                        break;  
+                    }
+                }
+                if (!foundFunction)
+                {
+                    i++;  
+                }
+            }
+            return true;  
+        }
 
 public:
     vector<string> ParseInput(string input)
@@ -94,19 +134,25 @@ public:
                 {
                     if (i >= 0 && !isdigit(input[i - 1]) && input[i] != '-')
                     {
-                        cout << "invalid input !" << endl;
+                        cout << "Invalid input!" << endl;
                         return {};
                     }
                     tokens.push_back(string(1, input[i]));
 
                 }
-                else if (input[i] == ')' || input[i] == '(')
+                else if (input[i] == ')' || input[i] == '(' || input[i] == ',')
                 {
+                    if ((input[i] == '(' && input[i + 1] == ')') || (input[i] == '(' && input[i + 2] == ')' && input[i + 1] == ','))
+                    {
+                        cout << "Invalid input!" << endl;
+                        return {};
+                    }
+                    
                     tokens.push_back(string(1, input[i]));
 
                 }
                 else {
-                    cout << "invalid input !" << endl;
+                    cout << "Invalid input !" << endl;
                     return {};
                 }
                 i++;
@@ -114,9 +160,15 @@ public:
         }
         if (!validateParentheses(tokens))
         {
-            cout << "parentheses !" << endl;
+            cout << "Parentheses mismatch!" << endl;
             return {};
         }
+        if (!validateFunctions(tokens))
+        {
+            cout << "Functions mismatch!" << endl;
+            return {};
+        }
+        
         return tokens;
     }
 };
@@ -142,10 +194,6 @@ int main()
     {
         cout << parts[i] << endl;
     }
-
-
-
-
 
 }
 
