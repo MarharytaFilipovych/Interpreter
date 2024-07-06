@@ -4,10 +4,9 @@ using namespace std;
 #include <vector>
 #include <stack>
 #include <algorithm>
-
+#include <queue>
 class Tokens
 {   
-    const string functions[4] = { "pow", "abs", "min", "max" };
     bool isOperator(char symbol)
     {
         return (symbol == '+' || symbol == '-' || symbol == '*' || symbol == '/' || symbol == '=');
@@ -87,9 +86,21 @@ class Tokens
             }
             return true;  
         }
-
+        
 public:
-    vector<string> ParseInput(string input)
+    const string functions[4] = { "pow", "abs", "min", "max" };
+private: bool isFunction(string token)
+{
+    for (int j = 0; j < 4; j++)
+    {
+        if (token == functions[j])
+        {
+            return true;
+        }
+    }
+    return false;
+}
+public:     vector<string> ParseInput(string& input)
     {
         vector<string> tokens;
         int i = 0;
@@ -132,7 +143,7 @@ public:
             else {
                 if (isOperator(input[i]))
                 {
-                    if (i >= 0 && !isdigit(input[i - 1]) && input[i] != '-')
+                    if (i >= 0 && !isdigit(input[i - 1]) && input[i-1] != ')' && input[i] != '-')
                     {
                         cout << "Invalid input!" << endl;
                         return {};
@@ -178,6 +189,70 @@ public:
 class ReversePolishNotation
 {
 
+    Tokens tokens;
+
+    bool isDouble(string token)
+    {
+        char* end = nullptr;
+        strtod(token.c_str(), &end);
+        return end != token.c_str() && *end == '\0';
+    }
+
+    int Precedence(string oper)
+    {
+        if (oper == "-" || oper == "+")
+            return 1;
+        else if (oper == "*" || oper == "/")
+            return 2;
+        else if (find(begin(tokens.functions), end(tokens.functions), oper) != end(tokens.functions))
+            return 3;        
+    }
+public:  queue<string> PostfixNotation(vector<string> tokens)
+    {
+        stack<string> callStack;
+        queue<string> queueOutput;
+        for (int i = 0; i < tokens.size(); i++)
+        {
+            if (isDouble(tokens[i]))
+            {
+                queueOutput.push(tokens[i]);
+            }
+            else if (tokens[i] == "(")
+            {
+                callStack.push(tokens[i]);
+            }
+            else if (tokens[i] == ")" && callStack.size() > 0)
+            {
+                while (!callStack.empty() && callStack.top() != "(")
+                {
+                    queueOutput.push(callStack.top());
+                    callStack.pop();
+                }
+                callStack.pop();
+            }
+            else if (tokens[i] == ",")
+            {
+                continue;
+            }
+            else
+            {
+                if (callStack.size() > 0 && Precedence(tokens[i]) <= Precedence(callStack.top()))
+                {
+                    queueOutput.push(callStack.top());
+                    callStack.pop();
+                }
+                callStack.push(tokens[i]);
+
+            }
+
+        }
+        while (callStack.size() > 0)
+        {
+            queueOutput.push(callStack.top());
+            callStack.pop();
+        }
+        return queueOutput;
+    }
 };
 
 
@@ -193,6 +268,14 @@ int main()
     for (int i = 0; i < parts.size(); i++)
     {
         cout << parts[i] << endl;
+    }
+    ReversePolishNotation notation;
+    queue<string> myQueue = notation.PostfixNotation(parts);
+    cout << "Polish:" << endl;
+    while (!myQueue.empty())
+    {
+        cout << myQueue.front() ;
+        myQueue.pop();
     }
 
 }
