@@ -6,7 +6,14 @@ using namespace std;
 #include <algorithm>
 #include <queue>
 class Tokens
-{   
+{
+public:
+    const string functions[4] = { "pow", "abs", "min", "max" };
+    bool isFunction(string token)
+    {
+        return find(begin(functions), end(functions), token) != end(functions);
+    }
+private: 
     bool isOperator(char symbol)
     {
         return (symbol == '+' || symbol == '-' || symbol == '*' || symbol == '/' || symbol == '=');
@@ -34,8 +41,7 @@ class Tokens
                             return false;
                         }
                         temp.pop();
-                    }
-                    
+                    }                    
                     else {
                         count++;
                     }                 
@@ -46,69 +52,53 @@ class Tokens
             }
             return false;
         }
-        bool validateFunctions(vector<string>& tokens)
-        {
-            int i = 0;
-            while (i < tokens.size())
-            {
-                bool foundFunction = false;
-                for (int j = 0; j < 4; j++)  
-                {
-                    if (tokens[i] == functions[j])
-                    {
-                        foundFunction = true;
-                        if (i + 1 >= tokens.size() || tokens[i + 1] != "(")
-                        {
-                            return false;  
-                        }
-                        i++;
-                        int count = 0;                       
-                        while (i < tokens.size() && tokens[i] != ")")
-                        {
-                            if (tokens[i] == ",")
-                            {
-                                count++;
-                            }
-                            i++;
-                        }                     
-                        if (count != 1)
-                        {
+        bool validateFunctions(vector<string>& tokens) {
+            stack<string> functionsStack;
+            int argCount = 0;
+            for (size_t i = 0; i < tokens.size(); ++i) {
+                if (find(begin(functions), end(functions), tokens[i]) != end(functions)) {
+                    functionsStack.push(tokens[i]);
+                    if (i + 1 >= tokens.size() || tokens[i + 1] != "(") {
+                        return false; 
+                    }
+                }           
+                else if (tokens[i] == ")") {
+                    if (functionsStack.empty()) {
+                        return false; 
+                    }
+                    string func = functionsStack.top();
+                    functionsStack.pop();                  
+                    if (func == "abs") {
+                        if (argCount != 0) {
                             return false;
                         }
-                       
-                        break;  
                     }
+                    else if (argCount != 1) {
+                        return false;
+                    }
+                    argCount = 0;
                 }
-                if (!foundFunction)
-                {
-                    i++;  
+                else if (tokens[i] == ",") {
+                    if (functionsStack.empty()) {
+                        return false; 
+                    }
+                    argCount += 1;
                 }
             }
-            return true;  
+            return true; 
         }
-        
-public:
-    const string functions[4] = { "pow", "abs", "min", "max" };
-private: bool isFunction(string token)
-{
-    for (int j = 0; j < 4; j++)
+
+public:     
+    vector<string> ParseInput(string& input)
     {
-        if (token == functions[j])
-        {
-            return true;
-        }
-    }
-    return false;
-}
-public:     vector<string> ParseInput(string& input)
-    {
+        bool function = false;
         vector<string> tokens;
         int i = 0;
-        while(i < input.length())
+        while (i < input.length())
         {
             if (isdigit(input[i]) || (input[i] == '-' && (i == 0 || !isdigit(input[i - 1]))))
             {
-                
+
                 string current_token = "";
                 if (input[i] == '-')
                 {
@@ -132,9 +122,10 @@ public:     vector<string> ParseInput(string& input)
                         tokens.push_back(functions[j]);
                         i += functions[j].length();
                         isFunction = true;
+                        function = true;
                         break;
-                    }                  
-               }
+                    }
+                }
                 if (!isFunction) {
                     cout << "Invalid input!" << endl;
                     return {};
@@ -143,13 +134,12 @@ public:     vector<string> ParseInput(string& input)
             else {
                 if (isOperator(input[i]))
                 {
-                    if (i >= 0 && !isdigit(input[i - 1]) && input[i-1] != ')' && input[i] != '-')
+                    if (i >= 0 && !isdigit(input[i - 1]) && input[i - 1] != ')' && input[i] != '-')
                     {
                         cout << "Invalid input!" << endl;
                         return {};
                     }
                     tokens.push_back(string(1, input[i]));
-
                 }
                 else if (input[i] == ')' || input[i] == '(' || input[i] == ',')
                 {
@@ -158,9 +148,7 @@ public:     vector<string> ParseInput(string& input)
                         cout << "Invalid input!" << endl;
                         return {};
                     }
-                    
                     tokens.push_back(string(1, input[i]));
-
                 }
                 else {
                     cout << "Invalid input !" << endl;
@@ -168,33 +156,33 @@ public:     vector<string> ParseInput(string& input)
                 }
                 i++;
             }
-        }
+        } 
+        
         if (!validateParentheses(tokens))
         {
             cout << "Parentheses mismatch!" << endl;
             return {};
         }
-        if (!validateFunctions(tokens))
+        
+        if (function)
+        {
+if (!validateFunctions(tokens))
         {
             cout << "Functions mismatch!" << endl;
             return {};
         }
-        
+        }
         return tokens;
     }
 };
 
-
-
 class ReversePolishNotation
 {
-
     Tokens tokens;
-
     bool isDouble(string token)
     {
         char* end = nullptr;
-        strtod(token.c_str(), &end);
+        (void)strtod(token.c_str(), &end);
         return end != token.c_str() && *end == '\0';
     }
 
@@ -204,10 +192,44 @@ class ReversePolishNotation
             return 1;
         else if (oper == "*" || oper == "/")
             return 2;
-        else if (find(begin(tokens.functions), end(tokens.functions), oper) != end(tokens.functions))
+        else if (tokens.isFunction(oper))
             return 3;        
+        return 0;
     }
-public:  queue<string> PostfixNotation(vector<string> tokens)
+    double applyOperator(string oper, double number1, double number2)
+    {
+        if (oper == "-")
+        {return number2 - number1;}
+        else if(oper == "+")
+        {return number2 + number1;}
+        else if(oper == "*")
+        {return number2 * number1;}
+        else if(oper == "/")
+        {
+            if (number1 == 0)
+            {
+                cout << "Sth went wrong!" << endl;
+                return 0;
+            }
+            return number2 / number1;
+        }
+        else if(oper == "min")
+        {return min(number1, number2);}
+        else if (oper == "max")
+        {return max(number1, number2);}        
+        else if (oper == "pow")
+        {return pow(number2, number1);}
+        else if (oper == "abs")
+        {return abs(number1);}
+        else
+        {
+            cout << "Sth went wrong!" << endl;
+            return 0 ;
+        }
+    }
+   
+
+public: queue<string> PostfixNotation(vector<string> tokens)
     {
         stack<string> callStack;
         queue<string> queueOutput;
@@ -221,18 +243,17 @@ public:  queue<string> PostfixNotation(vector<string> tokens)
             {
                 callStack.push(tokens[i]);
             }
-            else if (tokens[i] == ")" && callStack.size() > 0)
+            else if ((tokens[i] == ")" || tokens[i] == ",") && callStack.size() > 0)
             {
                 while (!callStack.empty() && callStack.top() != "(")
                 {
                     queueOutput.push(callStack.top());
                     callStack.pop();
                 }
-                callStack.pop();
-            }
-            else if (tokens[i] == ",")
-            {
-                continue;
+                if (tokens[i] == ")")
+                {
+                    callStack.pop();
+                }
             }
             else
             {
@@ -242,17 +263,57 @@ public:  queue<string> PostfixNotation(vector<string> tokens)
                     callStack.pop();
                 }
                 callStack.push(tokens[i]);
-
             }
-
         }
-        while (callStack.size() > 0)
+        while (!callStack.empty())
         {
             queueOutput.push(callStack.top());
             callStack.pop();
         }
         return queueOutput;
     }
+
+  double GetNumberFromStack(stack<string>& stackToCalculate)
+  {
+      double number = stod(stackToCalculate.top());
+      stackToCalculate.pop();
+      return number;
+  }
+
+  void applyOperatorAndPushBack(stack<string>& stackToCalculate, string token)
+  {
+      if (token == "abs")
+      {
+          double number1 = GetNumberFromStack(stackToCalculate);
+          string number = to_string(applyOperator(token, number1, 0));
+          stackToCalculate.push(number);
+      }
+      else {
+          double number1 = GetNumberFromStack(stackToCalculate);
+          double number2 = GetNumberFromStack(stackToCalculate);
+          string number = to_string(applyOperator(token, number1, number2));
+          stackToCalculate.push(number);
+      }
+  }
+
+
+      double Calculate(queue<string> queueOutput)
+      {
+          stack<string> stackToCalculate;
+          while (!queueOutput.empty() )
+          {
+              string token = queueOutput.front();
+              if (isDouble(token))
+              {
+                  stackToCalculate.push(token);                  
+              }
+              else {
+                  applyOperatorAndPushBack(stackToCalculate, token);
+              }   
+              queueOutput.pop();
+          }
+          return stod(stackToCalculate.top());
+      }
 };
 
 
@@ -271,12 +332,12 @@ int main()
     }
     ReversePolishNotation notation;
     queue<string> myQueue = notation.PostfixNotation(parts);
-    cout << "Polish:" << endl;
+    cout << "result: " << notation.Calculate(myQueue) << endl;
     while (!myQueue.empty())
     {
         cout << myQueue.front() ;
         myQueue.pop();
     }
-
+    
 }
 
