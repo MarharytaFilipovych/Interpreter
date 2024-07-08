@@ -13,6 +13,7 @@ public:
     {
         return find(begin(functions), end(functions), token) != end(functions);
     }
+    
 private: 
     bool isOperator(char symbol)
     {
@@ -55,7 +56,7 @@ private:
         bool validateFunctions(vector<string>& tokens) {
             stack<string> functionsStack;
             int argCount = 0;
-            for (size_t i = 0; i < tokens.size(); ++i) {
+            for (int i = 0; i < tokens.size(); i++) {
                 if (find(begin(functions), end(functions), tokens[i]) != end(functions)) {
                     functionsStack.push(tokens[i]);
                     if (i + 1 >= tokens.size() || tokens[i + 1] != "(") {
@@ -88,12 +89,23 @@ private:
             return true; 
         }
 
+        bool validateAssignemnt(vector<string>& tokens)
+        {
+            int count = 0;
+            for (int i = 0; i < tokens.size(); i++)
+            {
+              
+            }
+        }
+
 public:     
+    bool assignment = false;
     vector<string> ParseInput(string& input)
     {
         bool function = false;
         vector<string> tokens;
         int i = 0;
+        int countAssignment = 0;
         while (i < input.length())
         {
             if (isdigit(input[i]) || (input[i] == '-' && (i == 0 || !isdigit(input[i - 1]))))
@@ -138,6 +150,16 @@ public:
                     {
                         cout << "Invalid input!" << endl;
                         return {};
+                    }
+                    if (input[i] == '=')
+                    {
+                        assignment = true;
+                        countAssignment++;
+                        if (countAssignment > 1 || input[0] == '=' || (i>0 && isOperator(input[i-1])) )
+                        {
+                            cout << "Invalid input !" << endl;
+                            return {};
+                        }
                     }
                     tokens.push_back(string(1, input[i]));
                 }
@@ -297,7 +319,7 @@ public: queue<string> PostfixNotation(vector<string> tokens)
   }
 
 
-      double Calculate(queue<string> queueOutput)
+      double Calculate(queue<string>& queueOutput)
       {
           stack<string> stackToCalculate;
           while (!queueOutput.empty() )
@@ -314,30 +336,49 @@ public: queue<string> PostfixNotation(vector<string> tokens)
           }
           return stod(stackToCalculate.top());
       }
+
+      double GetResult(vector<string>& tokens)
+      {
+          queue<string> postfix = PostfixNotation(tokens);
+          return Calculate(postfix);
+      }
+};
+
+class ResultOnScreen
+{
+    ReversePolishNotation notation;
+    Tokens tokens;
+public:
+    void TakeUserInput(string& input)
+    {        
+        input.erase(remove(input.begin(), input.end(), ' '), input.end());
+        vector<string> parts = tokens.ParseInput(input);
+        if (!tokens.assignment)
+        {
+            cout << "Result: " << notation.GetResult(parts) << endl;
+        }
+
+    }
+
 };
 
 
 int main()
 {
-    string input;
-    cout << "Enter an expression:" << endl;
-    getline(cin, input);
-    cout << "Echo: " << input << endl;
-    input.erase(remove(input.begin(), input.end(), ' '), input.end());
-    Tokens tokens;
-    vector<string> parts = tokens.ParseInput(input);
-    for (int i = 0; i < parts.size(); i++)
+    while (true)
     {
-        cout << parts[i] << endl;
-    }
-    ReversePolishNotation notation;
-    queue<string> myQueue = notation.PostfixNotation(parts);
-    cout << "result: " << notation.Calculate(myQueue) << endl;
-    while (!myQueue.empty())
-    {
-        cout << myQueue.front() ;
-        myQueue.pop();
-    }
-    
-}
+        string input;
+        cout << "Enter an expression:" << endl;
+        getline(cin, input);
 
+        while (input.empty()) {
+            cout << "Input cannot be empty. Enter an expression:" << endl;
+            getline(cin, input);
+        }
+
+        ResultOnScreen result;
+        result.TakeUserInput(input);
+    }
+
+    return 0;
+}
