@@ -12,41 +12,40 @@ public:
     bool isFunction(string token)
     {
         return find(begin(functions), end(functions), token) != end(functions);
-    }
-    
+    }   
     bool isOperator(char symbol)
     {
         return (symbol == '+' || symbol == '-' || symbol == '*' || symbol == '/' || symbol == '=');
     }
     bool assignment = false;
 private:
-
         bool validateParentheses(vector<string>& tokens)
         {
             stack<string> temp;
             int count = 0;
             for (int i = 0; i < tokens.size(); i++)
             {              
-                    if (tokens[i] == "(" )
-                    {
-                        count = 0;
-                        temp.push(tokens[i]);
-                    }
-                    else if (tokens[i] == ")")
-                    {
-                        if (temp.empty() || temp.top() != "(")
-                        {
-                            return false;
-                        }
-                        if (count % 2 == 0 )
-                        {
-                            return false;
-                        }
-                        temp.pop();
-                    }                    
-                    else {
-                        count++;
-                    }                 
+               if (tokens[i] == "(" )
+               {
+                  count = 0;
+                  temp.push(tokens[i]);
+               }
+               else if (tokens[i] == ")")
+               {
+                   if (temp.empty() || temp.top() != "(")
+                   {
+                        return false;
+                   }
+                   if (count % 2 == 0 )
+                   {
+                      return false;
+                   }
+                   temp.pop();
+               }                    
+               else 
+               {
+                  count++;
+               }                 
             }
             if (temp.empty())
             {
@@ -58,7 +57,7 @@ private:
             stack<string> functionsStack;
             int argCount = 0;
             for (int i = 0; i < tokens.size(); i++) {
-                if (find(begin(functions), end(functions), tokens[i]) != end(functions)) {
+                if (isFunction(tokens[i])) {
                     functionsStack.push(tokens[i]);
                     if (i + 1 >= tokens.size() || tokens[i + 1] != "(") {
                         return false; 
@@ -88,21 +87,9 @@ private:
                 }
             }
             return true; 
-        }
-
-        bool validateAssignemnt(vector<string>& tokens)
-        {
-            int count = 0;
-            for (int i = 0; i < tokens.size(); i++)
-            {
-              
-            }
-        }
+        }        
 
 public:     
-    
-
-
     vector<string> ParseInput(string& input)
     {
         bool function = false;
@@ -113,10 +100,8 @@ public:
         if (input.substr(0, 3) == "var")
         {
             assignment = true;
-            input.erase(0, 3);
-           
+            input.erase(0, 3);         
         }
-
         while (i < input.length())
         {
             if (isdigit(input[i]) || (input[i] == '-' && (i == 0 || !isdigit(input[i - 1]))))
@@ -359,30 +344,27 @@ public:
                     return false;
                 }
             }
-                else if (input[i] == '=')
-                {
-                    assignment = true;
-                    if (input.substr(0, 3) != "var")
-                    {
-                        return false;
-                    }
-                    countAssignment++;
-                    if (countAssignment > 1 || i == 0 || tokens.isOperator(input[i - 1]))
-                    {
-                        return false;
-                    }
-                }
-            
-            
-                else if (input[i] == ',')
-                {
-                    commaCount++;
-                }
-                else if ((input[i] == '(' && input[i + 1] == ')') || (input[i] == '(' && input[i + 2] == ')' && input[i + 1] == ','))
+            else if (input[i] == '=')
+            {
+                assignment = true;
+                if (input.substr(0, 3) != "var")
                 {
                     return false;
                 }
-            
+                countAssignment++;
+                if (countAssignment > 1 || i == 0 || tokens.isOperator(input[i - 1]))
+                {
+                    return false;
+                }
+            }
+            else if (input[i] == ',')
+            {
+                commaCount++;
+            }
+            else if ((input[i] == '(' && input[i + 1] == ')') || (input[i] == '(' && input[i + 2] == ')' && input[i + 1] == ','))
+            {
+                return false;
+            }          
             else if (isalpha(input[i]))
             {
                 bool isFunction = false;
@@ -397,25 +379,25 @@ public:
                 }
                 if (!isFunction) {
                     if (assignment)
-                    {                       
+                    {
                         int start = 3;
                         while (i < input.length() && isalpha(input[i]) && input[i] != '=') {
                             i++;
-                        }                      
+                        }
                     }
                     else
                     {
                         continue;
-                    }                    
-             }
+                    }
+                }
+            }
             else if (isdigit(input[i]) || (i > 0 && i < input.length() && input[i] == '.' && isdigit(input[i - 1]) && isdigit(input[i + 1])))
             {
                 continue;
             }
             else {
-              return false;
-            }
-            }
+                return false;
+            }           
             if (commaCount != functionCount)
             {
                 return false;
@@ -426,14 +408,7 @@ public:
     void TakeUserInput(string& input)
     {
         input.erase(remove(input.begin(), input.end(), ' '), input.end());
-
         vector<string> parts = tokens.ParseInput(input);
-        if (parts.empty())
-        {
-            cout << "Parsing error!" << endl;
-            return;
-        }
-
         if (tokens.assignment)
         {           
             string variable_name = parts[0];
