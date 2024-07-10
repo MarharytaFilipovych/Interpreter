@@ -8,7 +8,6 @@ using namespace std;
 #include <map>
 class Tokens
 {
-
 public:
     const string functions[4] = { "pow", "abs", "min", "max" };
     bool isFunction(string token)
@@ -19,8 +18,7 @@ public:
     {
         return (symbol == '+' || symbol == '-' || symbol == '*' || symbol == '/' || symbol == '=');
     }
-    bool assignment = false;
-   bool function = false;
+    bool function = false;
 
         bool validateParentheses(vector<string>& tokens)
         {
@@ -28,27 +26,27 @@ public:
             int count = 0;
             for (int i = 0; i < tokens.size(); i++)
             {              
-               if (tokens[i] == "(" )
-               {
-                  count = 0;
-                  temp.push(tokens[i]);
-               }
-               else if (tokens[i] == ")")
-               {
-                   if (temp.empty() || temp.top() != "(")
-                   {
+                if (tokens[i] == "(" )
+                {
+                    count = 0;
+                    temp.push(tokens[i]);
+                }
+                else if (tokens[i] == ")")
+                {
+                    if (temp.empty() || temp.top() != "(")
+                    {
                         return false;
-                   }
-                   if (count % 2 == 0 )
-                   {
-                      return false;
-                   }
-                   temp.pop();
-               }                    
-               else 
-               {
-                  count++;
-               }                 
+                    }
+                    if (count % 2 == 0 )
+                    {
+                        return false;
+                    }
+                    temp.pop();
+                }                    
+                else 
+                {
+                    count++;
+                }                 
             }
             if (temp.empty())
             {
@@ -92,71 +90,65 @@ public:
             return true; 
         }        
 
-    vector<string> ParseInput(string& input)
-    {
-        vector<string> tokens;
-        int i = 0;
-        int countAssignment = 0;
-
-        if (input.substr(0, 3) == "var")
+        vector<string> ParseInput(string& input)
         {
-            assignment = true;
-            input.erase(0, 3);         
-        }
-        while (i < input.length())
-        {
-            if (isdigit(input[i]) || (input[i] == '-' && (i == 0 || !isdigit(input[i - 1]))))
+            vector<string> tokens;
+            int i = 0;
+            int countAssignment = 0;
+            if (input.substr(0, 3) == "var")
             {
-                string current_token = "";
-                if (input[i] == '-')
-                {
-                    current_token += input[i];
-                    i++;
-                }
-                while (i < input.length() && (isdigit(input[i]) || input[i] == '.'))
-                {
-                    current_token += input[i];
-                    i++;
-                }
-                tokens.push_back(current_token);
+                input.erase(0, 3);         
             }
-            else if (isalpha(input[i]))
+            while (i < input.length())
             {
-                bool isFunction = false;
-                for (int j = 0; j < 4; j++)
+                if (isdigit(input[i]) || (input[i] == '-' && (i == 0 || !isdigit(input[i - 1]))))
                 {
-                    if (input.substr(i, functions[j].length()) == functions[j])
+                    string current_token = "";
+                    if (input[i] == '-')
                     {
-                        tokens.push_back(functions[j]);
-                        i += functions[j].length();
-                        isFunction = true;
-                        function = true;
-                        break;
-                    }
-                }
-                if (!isFunction)
-                {
-                    string variable = "";
-                    while (i < input.length() && (isalpha(input[i]) || isdigit(input[i])))
-                    {
-                        variable += input[i];
+                        current_token += input[i];
                         i++;
                     }
-                    tokens.push_back(variable);
+                    while (i < input.length() && (isdigit(input[i]) || input[i] == '.'))
+                    {
+                        current_token += input[i];
+                        i++;
+                    }
+                    tokens.push_back(current_token);
+                }              
+                else if (isalpha(input[i]))
+                {
+                    bool isFunction = false;
+                    for (int j = 0; j < 4; j++)
+                    {
+                        if (input.substr(i, functions[j].length()) == functions[j])
+                        {
+                            tokens.push_back(functions[j]);
+                            i += functions[j].length();
+                            isFunction = true;
+                            function = true;
+                            break;
+                        }
+                    }
+                    if (!isFunction)
+                    {
+                        string variable = "";
+                        while (i < input.length() && (isalpha(input[i]) || isdigit(input[i])))
+                        {
+                            variable += input[i];
+                            i++;
+                        }
+                        tokens.push_back(variable);
+                    }
+                }
+                else
+                {
+                    tokens.push_back(string(1, input[i]));
+                    i++;
                 }
             }
-            else
-            {
-                tokens.push_back(string(1, input[i]));
-                i++;
-            }
+            return tokens;
         }
-
-        
-
-        return tokens;
-    }
-
 };
 
 class ReversePolishNotation
@@ -189,14 +181,7 @@ class ReversePolishNotation
         else if(oper == "*")
         {return number2 * number1;}
         else if(oper == "/")
-        {
-            if (number1 == 0)
-            {
-                cout << "Sth went wrong!" << endl;
-                return 0;
-            }
-            return number2 / number1;
-        }
+        {return number2 / number1;}
         else if(oper == "min")
         {return min(number1, number2);}
         else if (oper == "max")
@@ -334,10 +319,10 @@ public:
 
     bool validateInput(string& input)
     {
+        input.erase(remove(input.begin(), input.end(), ' '), input.end());
         int countAssignment = 0;
         int commaCount = 0;
         int functionCount = 0;
-        assignment = false;
         int i = 0;
         if (input.substr(0, 3) == "var")
         {
@@ -357,13 +342,9 @@ public:
                     return false;
                 }
                 else if (input[i] == '=')
-                {
-                    if (!assignment)
-                    {
-                        return false;
-                    }
+                {              
                     countAssignment++;
-                    if (countAssignment > 1 || i == 0 || tokens.isOperator(input[i - 1]))
+                    if (!assignment || countAssignment > 1 || i == 0 || tokens.isOperator(input[i - 1]) )
                     {
                         return false;
                     }
@@ -403,6 +384,10 @@ public:
                     if (assignment && (i < input.length() && input[i] == '=')) {
                         continue;
                     }
+                    else if (input.substr(0, 3) != "var" && input[i] == '=' && notation.isInContainer(variableName))
+                    {
+                        assignment = true;
+                    }
                     else if (notation.isInContainer(variableName))
                     {
                         continue;
@@ -411,18 +396,14 @@ public:
                         return false;
                     }
                     i--; 
-                }
-               
+                }               
             }
             else if (isdigit(input[i]) || (i > 0 && i < input.length() && input[i] == '.' && isdigit(input[i - 1]) && isdigit(input[i + 1])))
             {
                 continue;
-            }
-                
-              
+            }                             
         }
         return true;
-
     }
    
     void showContentsOfContainer()
@@ -444,7 +425,6 @@ public:
             cout << "Parentheses mismatch!" << endl;
             return;
         }
-
         if (tokens.function)
         {
             if (!tokens.validateFunctions(parts))
@@ -452,22 +432,20 @@ public:
                 cout << "Functions mismatch!" << endl;
                 return ;
             }
-        }
-       
-        if (tokens.assignment)
+        }      
+        if (assignment)
         {           
             string variable_name = parts[0];
             parts.erase(parts.begin(), parts.begin() + 2); 
             double var_value = notation.GetResult(parts);
             cout << variable_name << " = " << var_value << endl;  
             container[variable_name] = var_value;
-
         }
         else
         {
             cout << "Result: " << notation.GetResult(parts) << endl;
         }
-        showContentsOfContainer();
+        //showContentsOfContainer();
     }
 
 };
@@ -475,8 +453,7 @@ public:
 
 int main()
 {
-     map<string, double> container;
-
+    map<string, double> container;
     while (true)
     {
         string input;
@@ -484,8 +461,6 @@ int main()
         cout << ">";
         getline(cin, input);
         ResultOnScreen result(container);
-        input.erase(remove(input.begin(), input.end(), ' '), input.end());
-
         while (!result.validateInput(input)) {
             cout << "Invalid input!" << endl;
             cout << ">";
@@ -494,6 +469,5 @@ int main()
 
         result.TakeUserInput(input);
     }
-
     return 0;
 }
