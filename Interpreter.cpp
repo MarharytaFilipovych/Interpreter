@@ -161,6 +161,7 @@ public:
 
 class ReversePolishNotation
 {
+    map<string, double>& container;
     Tokens tokens;
     bool isDouble(string token)
     {
@@ -213,7 +214,8 @@ class ReversePolishNotation
    
 
 public: 
-     static map<string, double> container;
+    ReversePolishNotation(map<string, double>& cont) : container(cont) {}
+
 
      bool isInContainer(string value)
      {
@@ -318,15 +320,17 @@ public:
           return Calculate(postfix);
       }
 };
-map<string, double> ReversePolishNotation::container;
 
 class ResultOnScreen
-{
+{    
+    map<string, double>& container;
     ReversePolishNotation notation;
     Tokens tokens;
     bool assignment = false;
 
 public:
+    ResultOnScreen(map<string, double>& cont) : container(cont), notation(cont) {}
+
 
     bool validateInput(string& input)
     {
@@ -423,8 +427,8 @@ public:
    
     void showContentsOfContainer()
     {
-        map<string, double>::iterator it = notation.container.begin();
-        while (it != notation.container.end())
+        map<string, double>::iterator it = container.begin();
+        while (it != container.end())
         {
             cout << "Key: " << it->first
                 << ", Value: " << it->second << endl;
@@ -456,7 +460,7 @@ public:
             parts.erase(parts.begin(), parts.begin() + 2); 
             double var_value = notation.GetResult(parts);
             cout << variable_name << " = " << var_value << endl;  
-            notation.container[variable_name] = var_value;
+            container[variable_name] = var_value;
 
         }
         else
@@ -471,13 +475,15 @@ public:
 
 int main()
 {
+     map<string, double> container;
+
     while (true)
     {
         string input;
         Tokens tokens;
         cout << ">";
         getline(cin, input);
-        ResultOnScreen result;
+        ResultOnScreen result(container);
         input.erase(remove(input.begin(), input.end(), ' '), input.end());
 
         while (!result.validateInput(input)) {
