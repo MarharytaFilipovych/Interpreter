@@ -5,8 +5,10 @@ using namespace std;
 #include <stack>
 #include <algorithm>
 #include <queue>
+#include <map>
 class Tokens
 {
+
 public:
     const string functions[4] = { "pow", "abs", "min", "max" };
     bool isFunction(string token)
@@ -18,7 +20,8 @@ public:
         return (symbol == '+' || symbol == '-' || symbol == '*' || symbol == '/' || symbol == '=');
     }
     bool assignment = false;
-private:
+   bool function = false;
+
         bool validateParentheses(vector<string>& tokens)
         {
             stack<string> temp;
@@ -89,10 +92,8 @@ private:
             return true; 
         }        
 
-public:     
     vector<string> ParseInput(string& input)
     {
-        bool function = false;
         vector<string> tokens;
         int i = 0;
         int countAssignment = 0;
@@ -151,20 +152,7 @@ public:
             }
         }
 
-        if (!validateParentheses(tokens))
-        {
-            cout << "Parentheses mismatch!" << endl;
-            return {};
-        }
-
-        if (function)
-        {
-            if (!validateFunctions(tokens))
-            {
-                cout << "Functions mismatch!" << endl;
-                return {};
-            }
-        }
+        
 
         return tokens;
     }
@@ -224,13 +212,21 @@ class ReversePolishNotation
     }
    
 
-public: queue<string> PostfixNotation(vector<string> tokens)
+public: 
+     static map<string, double> container;
+
+     bool isInContainer(string value)
+     {
+         return  container.find(value) != container.end();
+     }
+
+    queue<string> PostfixNotation(vector<string> tokens)
     {
         stack<string> callStack;
         queue<string> queueOutput;
         for (int i = 0; i < tokens.size(); i++)
         {
-            if (isDouble(tokens[i]))
+            if (isDouble(tokens[i]) || isInContainer(tokens[i]))
             {
                 queueOutput.push(tokens[i]);
             }
@@ -252,12 +248,14 @@ public: queue<string> PostfixNotation(vector<string> tokens)
             }
             else
             {
-                if (callStack.size() > 0 && Precedence(tokens[i]) <= Precedence(callStack.top()))
-                {
-                    queueOutput.push(callStack.top());
-                    callStack.pop();
-                }
-                callStack.push(tokens[i]);
+               
+                 if (callStack.size() > 0 && Precedence(tokens[i]) <= Precedence(callStack.top()))
+                    {
+                        queueOutput.push(callStack.top());
+                        callStack.pop();
+                    }
+                    callStack.push(tokens[i]);
+                
             }
         }
         while (!callStack.empty())
@@ -302,6 +300,10 @@ public: queue<string> PostfixNotation(vector<string> tokens)
               {
                   stackToCalculate.push(token);                  
               }
+              else if (isInContainer(token))
+              {
+                  stackToCalculate.push(to_string(container.at(token)));                
+              }
               else {
                   applyOperatorAndPushBack(stackToCalculate, token);
               }   
@@ -316,6 +318,7 @@ public: queue<string> PostfixNotation(vector<string> tokens)
           return Calculate(postfix);
       }
 };
+map<string, double> ReversePolishNotation::container;
 
 class ResultOnScreen
 {
@@ -331,35 +334,44 @@ public:
         int commaCount = 0;
         int functionCount = 0;
         assignment = false;
+        int i = 0;
+        if (input.substr(0, 3) == "var")
+        {
+            assignment = true;
+            i += 3;
+        }
         if (input.empty())
         {
             return false;
         }
-        for (int i = 0; i < input.length(); i++)
+        for (i ; i < input.length(); i++)
         {
-            if (tokens.isOperator(input[i]))
+             if (tokens.isOperator(input[i]))
             {
                 if (i == 0 || (!isdigit(input[i - 1]) && input[i - 1] != ')' && input[i] != '-' && input[i] != '='))
                 {
                     return false;
                 }
-            }
-            else if (input[i] == '=')
-            {
-                assignment = true;
-                if (input.substr(0, 3) != "var")
+                else if (input[i] == '=')
                 {
-                    return false;
+                    if (!assignment)
+                    {
+                        return false;
+                    }
+                    countAssignment++;
+                    if (countAssignment > 1 || i == 0 || tokens.isOperator(input[i - 1]))
+                    {
+                        return false;
+                    }
                 }
-                countAssignment++;
-                if (countAssignment > 1 || i == 0 || tokens.isOperator(input[i - 1]))
-                {
-                    return false;
-                }
-            }
+            }          
             else if (input[i] == ',')
             {
                 commaCount++;
+                if (commaCount != functionCount)
+                {
+                    return false;
+                }
             }
             else if ((input[i] == '(' && input[i + 1] == ')') || (input[i] == '(' && input[i + 2] == ')' && input[i + 1] == ','))
             {
@@ -378,48 +390,80 @@ public:
                     }
                 }
                 if (!isFunction) {
-                    if (assignment)
-                    {
-                        int start = 3;
-                        while (i < input.length() && isalpha(input[i]) && input[i] != '=') {
-                            i++;
-                        }
+                    string variableName;
+                    while (i < input.length() && isalpha(input[i])) {
+                        variableName += input[i];
+                        i++;
                     }
-                    else
+                    i += variableName.length()-1;
+                    if (assignment && (i < input.length() && input[i] == '=')) {
+                        continue;
+                    }
+                    else if (notation.isInContainer(variableName))
                     {
                         continue;
                     }
+                    else {
+                        return false;
+                    }
+                    i--; 
                 }
+               
             }
             else if (isdigit(input[i]) || (i > 0 && i < input.length() && input[i] == '.' && isdigit(input[i - 1]) && isdigit(input[i + 1])))
             {
                 continue;
             }
-            else {
-                return false;
-            }           
-            if (commaCount != functionCount)
-            {
-                return false;
-            }           
-            return true;
+                
+              
+        }
+        return true;
+
+    }
+   
+    void showContentsOfContainer()
+    {
+        map<string, double>::iterator it = notation.container.begin();
+        while (it != notation.container.end())
+        {
+            cout << "Key: " << it->first
+                << ", Value: " << it->second << endl;
+            ++it;
         }
     }
+
     void TakeUserInput(string& input)
     {
-        input.erase(remove(input.begin(), input.end(), ' '), input.end());
         vector<string> parts = tokens.ParseInput(input);
+        if (!tokens.validateParentheses(parts))
+        {
+            cout << "Parentheses mismatch!" << endl;
+            return;
+        }
+
+        if (tokens.function)
+        {
+            if (!tokens.validateFunctions(parts))
+            {
+                cout << "Functions mismatch!" << endl;
+                return ;
+            }
+        }
+       
         if (tokens.assignment)
         {           
             string variable_name = parts[0];
             parts.erase(parts.begin(), parts.begin() + 2); 
             double var_value = notation.GetResult(parts);
-            cout << variable_name << " = " << var_value << endl;                     
+            cout << variable_name << " = " << var_value << endl;  
+            notation.container[variable_name] = var_value;
+
         }
         else
         {
             cout << "Result: " << notation.GetResult(parts) << endl;
         }
+        showContentsOfContainer();
     }
 
 };
@@ -431,12 +475,14 @@ int main()
     {
         string input;
         Tokens tokens;
-        cout << "Enter an expression:" << endl;
+        cout << ">";
         getline(cin, input);
         ResultOnScreen result;
+        input.erase(remove(input.begin(), input.end(), ' '), input.end());
 
         while (!result.validateInput(input)) {
-            cout << "Invalid input! Enter an expression:" << endl;
+            cout << "Invalid input!" << endl;
+            cout << ">";
             getline(cin, input);
         }
 
