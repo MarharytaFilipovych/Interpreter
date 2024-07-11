@@ -54,42 +54,6 @@ public:
             }
             return false;
         }
-        bool validateFunctions(vector<string>& tokens) {
-            stack<string> functionsStack;
-            int argCount = 0;
-            for (int i = 0; i < tokens.size(); i++) {
-                if (isFunction(tokens[i])) {
-                    functionsStack.push(tokens[i]);
-                    if (i + 1 >= tokens.size() || tokens[i + 1] != "(") {
-                        return false; 
-                    }
-                }           
-                else if (tokens[i] == ")") {
-                    if (functionsStack.empty()) {
-                        return false; 
-                    }
-                    string func = functionsStack.top();
-                    functionsStack.pop();                  
-                    if (func == "abs") {
-                        if (argCount != 0) {
-                            return false;
-                        }
-                    }
-                    else if (argCount != 1) {
-                        return false;
-                    }
-                    argCount = 0;
-                }
-                else if (tokens[i] == ",") {
-                    if (functionsStack.empty()) {
-                        return false; 
-                    }
-                    argCount += 1;
-                }
-            }
-            return true; 
-        }        
-
         vector<string> ParseInput(string& input)
         {
             vector<string> tokens;
@@ -292,6 +256,7 @@ public:
                   stackToCalculate.push(to_string(container.at(token)));                
               }
               else {
+                  
                   applyOperatorAndPushBack(stackToCalculate, token);
               }   
               queueOutput.pop();
@@ -353,10 +318,7 @@ public:
             else if (input[i] == ',')
             {
                 commaCount++;
-                if (commaCount != functionCount)
-                {
-                    return false;
-                }
+                
             }
             else if ((input[i] == '(' && input[i + 1] == ')') || (input[i] == '(' && input[i + 2] == ')' && input[i + 1] == ','))
             {
@@ -374,34 +336,48 @@ public:
                         functionCount++;
                     }
                 }
+                if (isFunction)
+                {
+                    if (input[i] == '(' && input[i+2] == ')' && input[i+1] == ',' && i < input.length())
+                    {
+                        return false;
+                    }
+                }
                 if (!isFunction) {
                     string variableName;
                     while (i < input.length() && isalpha(input[i])) {
                         variableName += input[i];
                         i++;
                     }
-                    i += variableName.length()-1;
-                    if (assignment && (i < input.length() && input[i] == '=')) {
-                        continue;
-                    }
-                    else if (input.substr(0, 3) != "var" && input[i] == '=' && notation.isInContainer(variableName))
+                    if (i < input.length())
                     {
-                        assignment = true;
-                    }
-                    else if (notation.isInContainer(variableName))
-                    {
-                        continue;
-                    }
-                    else {
-                        return false;
-                    }
+                        i += variableName.length() - 1;
+                        if (assignment && (i < input.length() && input[i] == '=')) {
+                            continue;
+                        }
+                        else if (input.substr(0, 3) != "var" && input[i] == '=' && i < input.size() && notation.isInContainer(variableName))
+                        {
+                            assignment = true;
+                        }
+                        else if (!notation.isInContainer(variableName))
+                        {
+                            return false;
+                        }                       
+                    }                 
                     i--; 
                 }               
             }
             else if (isdigit(input[i]) || (i > 0 && i < input.length() && input[i] == '.' && isdigit(input[i - 1]) && isdigit(input[i + 1])))
             {
                 continue;
-            }                             
+            } 
+            else if(!isdigit(input[i]) && !isalpha(input[i]) && !tokens.isOperator(input[i]) && input[i]!='(' && input[i] != ')'){
+                 return false;
+             }
+        }
+        if (commaCount != functionCount)
+        {
+            return false;
         }
         return true;
     }
@@ -425,14 +401,7 @@ public:
             cout << "Parentheses mismatch!" << endl;
             return;
         }
-        if (tokens.function)
-        {
-            if (!tokens.validateFunctions(parts))
-            {
-                cout << "Functions mismatch!" << endl;
-                return ;
-            }
-        }      
+        
         if (assignment)
         {           
             string variable_name = parts[0];
@@ -453,6 +422,7 @@ public:
 
 int main()
 {
+    cout << "Type 'exit' to finish!" << endl;
     map<string, double> container;
     while (true)
     {
@@ -460,6 +430,10 @@ int main()
         Tokens tokens;
         cout << ">";
         getline(cin, input);
+        if (input == "exit")
+        {
+            return 0;
+        }
         ResultOnScreen result(container);
         while (!result.validateInput(input)) {
             cout << "Invalid input!" << endl;
