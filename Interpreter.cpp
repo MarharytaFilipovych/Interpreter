@@ -289,15 +289,15 @@ public:
         int commaCount = 0;
         int functionCount = 0;
         int i = 0;
-        if (input.substr(0, 3) == "var")
-        {
-            assignment = true;
-            i += 3;
-        }
         if (input.empty())
         {
             return false;
         }
+        if (input.substr(0, 3) == "var")
+        {
+            assignment = true;
+            i += 3;
+        }       
         for (i ; i < input.length(); i++)
         {
              if (tokens.isOperator(input[i]))
@@ -317,8 +317,7 @@ public:
             }          
             else if (input[i] == ',')
             {
-                commaCount++;
-                
+                commaCount++;              
             }
             else if ((input[i] == '(' && input[i + 1] == ')') || (input[i] == '(' && input[i + 2] == ')' && input[i + 1] == ','))
             {
@@ -352,10 +351,8 @@ public:
                     if (i < input.length())
                     {
                         i += variableName.length() - 1;
-                        if (assignment && (i < input.length() && input[i] == '=')) {
-                            continue;
-                        }
-                        else if (input.substr(0, 3) != "var" && input[i] == '=' && i < input.size() && notation.isInContainer(variableName))
+                        
+                        if (input.substr(0, 3) != "var" && input[i] == '=' && i < input.size() && notation.isInContainer(variableName))
                         {
                             assignment = true;
                         }
@@ -366,12 +363,8 @@ public:
                     }                 
                     i--; 
                 }               
-            }
-            else if (isdigit(input[i]) || (i > 0 && i < input.length() && input[i] == '.' && isdigit(input[i - 1]) && isdigit(input[i + 1])))
-            {
-                continue;
-            } 
-            else if(!isdigit(input[i]) && !isalpha(input[i]) && !tokens.isOperator(input[i]) && input[i]!='(' && input[i] != ')'){
+            }            
+            else if(!isdigit(input[i]) && !isalpha(input[i]) && !tokens.isOperator(input[i]) && input[i]!='(' && input[i] != ')' && input[i] != '.') {
                  return false;
              }
         }
