@@ -289,6 +289,7 @@ public:
         int commaCount = 0;
         int functionCount = 0;
         int i = 0;
+        int abs = 0;
         if (input.empty())
         {
             return false;
@@ -302,7 +303,7 @@ public:
         {
              if (tokens.isOperator(input[i]))
             {
-                if (i == 0 || (!isdigit(input[i - 1]) && input[i - 1] != ')' && input[i] != '-' && input[i] != '='))
+                if ((i == 0 && input[i] != '-') || (!isdigit(input[i - 1]) && input[i - 1] != ')' && input[i] != '-' && input[i] != '=' && !isalnum(input[i-1])))
                 {
                     return false;
                 }
@@ -332,6 +333,10 @@ public:
                     {
                         i += tokens.functions[j].length();
                         isFunction = true;
+                        if (tokens.functions[j] == "abs")
+                        {
+                            abs++;
+                        }
                         functionCount++;
                     }
                 }
@@ -350,13 +355,12 @@ public:
                     }
                     if (i < input.length())
                     {
-                        i += variableName.length() - 1;
                         
                         if (input.substr(0, 3) != "var" && input[i] == '=' && i < input.size() && notation.isInContainer(variableName))
                         {
                             assignment = true;
                         }
-                        else if (!notation.isInContainer(variableName))
+                        else if (!notation.isInContainer(variableName) && input.substr(0, 3) != "var")
                         {
                             return false;
                         }                       
@@ -368,10 +372,20 @@ public:
                  return false;
              }
         }
-        if (commaCount != functionCount)
+        if (abs > 0)
         {
-            return false;
+            if (commaCount != functionCount - abs)
+            {
+                return false;
+            }
         }
+        else{
+            if (commaCount != functionCount)
+            {
+                return false;
+            }
+        }
+        
         return true;
     }
    
@@ -391,7 +405,7 @@ public:
         vector<string> parts = tokens.ParseInput(input);
         if (!tokens.validateParentheses(parts))
         {
-            cout << "Parentheses mismatch!" << endl;
+            cout << "Invalid input!" << endl;
             return;
         }
         
@@ -400,12 +414,12 @@ public:
             string variable_name = parts[0];
             parts.erase(parts.begin(), parts.begin() + 2); 
             double var_value = notation.GetResult(parts);
-            cout << variable_name << " = " << var_value << endl;  
+            cout << "Echo: "<< variable_name << " = " << var_value << endl;
             container[variable_name] = var_value;
         }
         else
         {
-            cout << "Result: " << notation.GetResult(parts) << endl;
+            cout << "Echo: " << notation.GetResult(parts) << endl;
         }
         //showContentsOfContainer();
     }
@@ -415,7 +429,6 @@ public:
 
 int main()
 {
-    cout << "Type 'exit' to finish!" << endl;
     map<string, double> container;
     while (true)
     {
