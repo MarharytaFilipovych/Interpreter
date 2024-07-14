@@ -303,7 +303,7 @@ public:
         {
              if (tokens.isOperator(input[i]))
             {
-                if ((i == 0 && input[i] != '-') || (!isdigit(input[i - 1]) && input[i - 1] != ')' && input[i] != '-' && input[i] != '=' && !isalnum(input[i-1])))
+                 if ((i == 0 && input[i] != '-') || (i < input.length() && !isdigit(input[i - 1]) && input[i - 1] != ')' && input[i] != '-' && input[i] != '=' && !isalnum(input[i - 1])))
                 {
                     return false;
                 }

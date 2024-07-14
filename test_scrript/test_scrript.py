@@ -102,16 +102,33 @@ def test_echo():
             ">Echo: 4.44514e+06\n"
             ">Echo: 4.31509e+27\n"
             ">Echo: 1\n>"
+        )},
+         {"input": (
+            "var cloud = min(8*9, -8)\n"           
+            "var sun = abs(-9)+pow(7, 8) * max(8, min(7,1))\n"   
+            "cloud = cloud * (100000)\n"
+            "var sum = cloud + sun\n"
+            "var house = sum - 1000000000\n"
+            "var lion = house * 100\n"
+            "lion = lion * (-1)\n"
+            "exit\n"
+        ),
+        "expected_output": (
+            ">Echo: cloud = -8\n"
+            ">Echo: sun = 4.61184e+07\n"
+            ">Echo: cloud = -800000\n"
+            ">Echo: sum = 4.53184e+07\n"
+            ">Echo: house = -1e+09\n"
+            ">Echo: lion = -1e+11\n"
+            ">Echo: lion = 1e+11\n>"
         )}
        
     ]
 
     for test in tests:
         input_data = test["input"]
-        expected_output = test["expected_output"]
-        
-        output, error = run_echo(input_data)
-        
+        expected_output = test["expected_output"]       
+        output, error = run_echo(input_data)        
         if error:
             print(f"Test failed for input:\n{input_data}")
             print(f"Error:\n{error}")
