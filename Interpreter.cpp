@@ -277,129 +277,140 @@ class ResultOnScreen
     ReversePolishNotation notation;
     Tokens tokens;
     bool assignment = false;
-
-public:
-    ResultOnScreen(map<string, double>& cont) : container(cont), notation(cont) {}
-
-
-    bool validateInput(string& input)
+    bool isAssignment(const string& input, int& i)
     {
-        input.erase(remove(input.begin(), input.end(), ' '), input.end());
-        int countAssignment = 0;
-        int commaCount = 0;
-        int functionCount = 0;
-        int i = 0;
-        int abs = 0;
-        if (input.empty())
-        {
-            return false;
-        }
         if (input.substr(0, 3) == "var")
         {
             assignment = true;
             i += 3;
-        }       
-        for (i ; i < input.length(); i++)
+            return true;
+        }
+        return false;
+    }
+
+    bool handleOperators(const string& input, int& i, bool assignment, int& countAssignment)
+    {
+        if (tokens.isOperator(input[i]))
         {
-             if (tokens.isOperator(input[i]))
+            if ((i == 0 && input[i] != '-') || (i > 0 && !isdigit(input[i - 1]) && input[i - 1] != ')' && input[i] != '-' && input[i] != '=' && !isalnum(input[i - 1])))
             {
-                 if ((i == 0 && input[i] != '-') || (i < input.length() && !isdigit(input[i - 1]) && input[i - 1] != ')' && input[i] != '-' && input[i] != '=' && !isalnum(input[i - 1])))
+                return false;
+            }
+            else if (input[i] == '=')
+            {
+                countAssignment++;
+                if (!assignment || countAssignment > 1 || i == 0 || tokens.isOperator(input[i - 1]))
                 {
                     return false;
                 }
-                else if (input[i] == '=')
-                {              
-                    countAssignment++;
-                    if (!assignment || countAssignment > 1 || i == 0 || tokens.isOperator(input[i - 1]) )
-                    {
-                        return false;
-                    }
+            }
+        }
+        return true;
+    }
+
+    bool isFunction(string& input, int& i, int& abs, int& functionCount)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            if (input.substr(i, tokens.functions[j].length()) == tokens.functions[j])
+            {
+                i += tokens.functions[j].length();
+
+                if (tokens.functions[j] == "abs")
+                {
+                    abs++;
                 }
-            }          
+                functionCount++;
+                return true;
+                break;
+            }
+        }
+        return false;
+    }
+
+    bool handleVariables(string& input, int& i, bool& assignment)
+    {
+        string variableName;
+        while (i < input.length() && isalpha(input[i])) {
+            variableName += input[i];
+            i++;
+        }
+        if (i < input.length())
+        {
+            if (input.substr(0, 3) != "var" && input[i] == '=' && i < input.size() && notation.isInContainer(variableName))
+            {
+                assignment = true;
+            }
+            else if (!notation.isInContainer(variableName) && input.substr(0, 3) != "var")
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool isValidSymbol(string& input, int& i)
+    {
+        return isdigit(input[i]) || isalpha(input[i]) || tokens.isOperator(input[i]) || input[i] == '(' || input[i] == ')' || input[i] == '.';
+    }
+
+public:
+    ResultOnScreen(map<string, double>& cont) : container(cont), notation(cont) {}
+
+    bool validateInput(string& input)
+    {
+        input.erase(remove(input.begin(), input.end(), ' '), input.end());
+        if (input.empty())
+        {
+            return false;
+        }
+        int countAssignment = 0;
+        int commaCount = 0;
+        int functionCount = 0;
+        int i = 0;
+        int abs = 0;       
+        assignment = isAssignment(input, i);
+        for (; i < input.length(); i++)
+        {
+            if (!handleOperators(input, i, assignment, countAssignment))
+            {
+                return false;
+            }
             else if (input[i] == ',')
             {
-                commaCount++;              
+                commaCount++;
             }
             else if ((input[i] == '(' && input[i + 1] == ')') || (input[i] == '(' && input[i + 2] == ')' && input[i + 1] == ','))
             {
                 return false;
-            }          
+            }
             else if (isalpha(input[i]))
             {
-                bool isFunction = false;
-                for (int j = 0; j < 4; j++)
+                if (isFunction(input, i, abs, functionCount))
                 {
-                    if (input.substr(i, tokens.functions[j].length()) == tokens.functions[j])
-                    {
-                        i += tokens.functions[j].length();
-                        isFunction = true;
-                        if (tokens.functions[j] == "abs")
-                        {
-                            abs++;
-                        }
-                        functionCount++;
-                    }
-                }
-                if (isFunction)
-                {
-                    if (input[i] == '(' && input[i+2] == ')' && input[i+1] == ',' && i < input.length())
+                    if (input[i] == '(' && input[i + 2] == ')' && input[i + 1] == ',' && i < input.length())
                     {
                         return false;
                     }
                 }
-                if (!isFunction) {
-                    string variableName;
-                    while (i < input.length() && isalpha(input[i])) {
-                        variableName += input[i];
-                        i++;
-                    }
-                    if (i < input.length())
+                else {
+                    if (!handleVariables(input, i, assignment))
                     {
-                        
-                        if (input.substr(0, 3) != "var" && input[i] == '=' && i < input.size() && notation.isInContainer(variableName))
-                        {
-                            assignment = true;
-                        }
-                        else if (!notation.isInContainer(variableName) && input.substr(0, 3) != "var")
-                        {
-                            return false;
-                        }                       
-                    }                 
-                    i--; 
-                }               
-            }            
-            else if(!isdigit(input[i]) && !isalpha(input[i]) && !tokens.isOperator(input[i]) && input[i]!='(' && input[i] != ')' && input[i] != '.') {
-                 return false;
-             }
-        }
-        if (abs > 0)
-        {
-            if (commaCount != functionCount - abs)
-            {
+                        return false;
+                    }
+                    i--;
+                }
+            }
+            else if (!isValidSymbol(input, i)) {
                 return false;
             }
         }
-        else{
-            if (commaCount != functionCount)
-            {
-                return false;
-            }
+        if ((abs > 0 && commaCount != functionCount - abs) || (abs == 0 && commaCount != functionCount)) {
+            return false;
         }
-        
         return true;
     }
    
-    void showContentsOfContainer()
-    {
-        map<string, double>::iterator it = container.begin();
-        while (it != container.end())
-        {
-            cout << "Key: " << it->first
-                << ", Value: " << it->second << endl;
-            ++it;
-        }
-    }
-
     void TakeUserInput(string& input)
     {
         vector<string> parts = tokens.ParseInput(input);
@@ -421,7 +432,6 @@ public:
         {
             cout << "Echo: " << notation.GetResult(parts) << endl;
         }
-        //showContentsOfContainer();
     }
 
 };
@@ -446,7 +456,6 @@ int main()
             cout << ">";
             getline(cin, input);
         }
-
         result.TakeUserInput(input);
     }
     return 0;
