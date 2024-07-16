@@ -6,119 +6,140 @@ using namespace std;
 #include <algorithm>
 #include <queue>
 #include <map>
+
 class Tokens
 {
+    string constructNumber(string& input, int& i)
+    {
+        string current_number = "";
+        if (input[i] == '-')
+        {
+            current_number += input[i];
+            i++;
+        }
+        while (i < input.length() && (isdigit(input[i]) || input[i] == '.'))
+        {
+            current_number += input[i];
+            i++;
+        }
+        return current_number;
+    }
+
+    bool isFunction(string& input, int& i, vector<string>& tokens, bool& function)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            if (input.substr(i, functions[j].length()) == functions[j])
+            {
+                tokens.push_back(functions[j]);
+                i += functions[j].length();
+                function = true;
+                return true;
+                break;
+            }
+        }
+        return false;
+    }
+
 public:
+    string getVariableName(string& input, int& i)
+    {
+        string variable = "";
+        while (i < input.length() && isalnum(input[i]))
+        {
+            variable += input[i];
+            i++;
+        }
+        return variable;
+    }
+
     const string functions[4] = { "pow", "abs", "min", "max" };
+
     bool isFunction(string token)
     {
         return find(begin(functions), end(functions), token) != end(functions);
     }   
+
     bool isOperator(char symbol)
     {
         return (symbol == '+' || symbol == '-' || symbol == '*' || symbol == '/' || symbol == '=');
     }
+
     bool function = false;
 
-        bool validateParentheses(vector<string>& tokens)
-        {
-            stack<string> temp;
-            int count = 0;
-            for (int i = 0; i < tokens.size(); i++)
-            {              
-                if (tokens[i] == "(" )
-                {
-                    count = 0;
-                    temp.push(tokens[i]);
-                }
-                else if (tokens[i] == ")")
-                {
-                    if (temp.empty() || temp.top() != "(")
-                    {
-                        return false;
-                    }
-                    if (count % 2 == 0 )
-                    {
-                        return false;
-                    }
-                    temp.pop();
-                }                    
-                else 
-                {
-                    count++;
-                }                 
-            }
-            if (temp.empty())
+    bool validateParentheses(vector<string>& tokens)
+    {
+        stack<string> temp;
+        int count = 0;
+        for (int i = 0; i < tokens.size(); i++)
+        {              
+            if (tokens[i] == "(" )
             {
-                return true;
+                count = 0;
+                temp.push(tokens[i]);
             }
-            return false;
+            else if (tokens[i] == ")")
+            {
+                if (temp.empty() || temp.top() != "(")
+                {
+                    return false;
+                }
+                if (count % 2 == 0 )
+                {
+                    return false;
+                }
+                temp.pop();
+            }                    
+            else 
+            {
+                count++;
+            }                 
         }
-        vector<string> ParseInput(string& input)
+        if (temp.empty())
         {
-            vector<string> tokens;
-            int i = 0;
-            int countAssignment = 0;
-            if (input.substr(0, 3) == "var")
-            {
-                input.erase(0, 3);         
-            }
-            while (i < input.length())
-            {
-                if (isdigit(input[i]) || (input[i] == '-' && (i == 0 || !isdigit(input[i - 1]))))
-                {
-                    string current_token = "";
-                    if (input[i] == '-')
-                    {
-                        current_token += input[i];
-                        i++;
-                    }
-                    while (i < input.length() && (isdigit(input[i]) || input[i] == '.'))
-                    {
-                        current_token += input[i];
-                        i++;
-                    }
-                    tokens.push_back(current_token);
-                }              
-                else if (isalpha(input[i]))
-                {
-                    bool isFunction = false;
-                    for (int j = 0; j < 4; j++)
-                    {
-                        if (input.substr(i, functions[j].length()) == functions[j])
-                        {
-                            tokens.push_back(functions[j]);
-                            i += functions[j].length();
-                            isFunction = true;
-                            function = true;
-                            break;
-                        }
-                    }
-                    if (!isFunction)
-                    {
-                        string variable = "";
-                        while (i < input.length() && (isalpha(input[i]) || isdigit(input[i])))
-                        {
-                            variable += input[i];
-                            i++;
-                        }
-                        tokens.push_back(variable);
-                    }
-                }
-                else
-                {
-                    tokens.push_back(string(1, input[i]));
-                    i++;
-                }
-            }
-            return tokens;
+            return true;
         }
+        return false;
+    }
+
+    vector<string> ParseInput(string& input)
+    {
+        vector<string> tokens;
+        int i = 0;
+        if (input.substr(0, 3) == "var")
+        {
+            input.erase(0, 3);         
+        }
+        while (i < input.length())
+        {
+            if (isdigit(input[i]) || (input[i] == '-' && (i == 0 || !isdigit(input[i - 1]))))
+            {
+                string current_number = constructNumber(input, i);
+                tokens.push_back(current_number);
+            }              
+            else if (isalpha(input[i]))
+            {
+                if (!isFunction(input, i, tokens, function))
+                {
+                    string variable = getVariableName(input, i);
+                    tokens.push_back(variable);
+                }
+            }
+            else
+            {
+                tokens.push_back(string(1, input[i]));
+                i++;
+            }
+        }
+        return tokens;
+    }
 };
 
 class ReversePolishNotation
 {
     map<string, double>& container;
     Tokens tokens;
+
     bool isDouble(string token)
     {
         char* end = nullptr;
@@ -136,6 +157,7 @@ class ReversePolishNotation
             return 3;        
         return 0;
     }
+
     double applyOperator(string oper, double number1, double number2)
     {
         if (oper == "-")
@@ -160,11 +182,9 @@ class ReversePolishNotation
             return 0 ;
         }
     }
-   
 
 public: 
     ReversePolishNotation(map<string, double>& cont) : container(cont) {}
-
 
      bool isInContainer(string value)
      {
@@ -240,35 +260,34 @@ public:
       }
   }
 
-
-      double Calculate(queue<string>& queueOutput)
-      {
-          stack<string> stackToCalculate;
-          while (!queueOutput.empty() )
-          {
-              string token = queueOutput.front();
-              if (isDouble(token))
-              {
-                  stackToCalculate.push(token);                  
-              }
-              else if (isInContainer(token))
-              {
-                  stackToCalculate.push(to_string(container.at(token)));                
-              }
-              else {
+    double Calculate(queue<string>& queueOutput)
+    {
+        stack<string> stackToCalculate;
+        while (!queueOutput.empty() )
+        {
+            string token = queueOutput.front();
+            if (isDouble(token))
+            {
+                stackToCalculate.push(token);                  
+            }
+            else if (isInContainer(token))
+            {
+                stackToCalculate.push(to_string(container.at(token)));                
+            }
+            else {
                   
-                  applyOperatorAndPushBack(stackToCalculate, token);
-              }   
-              queueOutput.pop();
-          }
-          return stod(stackToCalculate.top());
-      }
+                applyOperatorAndPushBack(stackToCalculate, token);
+            }   
+            queueOutput.pop();
+        }
+        return stod(stackToCalculate.top());
+    }
 
-      double GetResult(vector<string>& tokens)
-      {
-          queue<string> postfix = PostfixNotation(tokens);
-          return Calculate(postfix);
-      }
+    double GetResult(vector<string>& tokens)
+    {
+        queue<string> postfix = PostfixNotation(tokens);
+        return Calculate(postfix);
+    }
 };
 
 class ResultOnScreen
@@ -277,6 +296,7 @@ class ResultOnScreen
     ReversePolishNotation notation;
     Tokens tokens;
     bool assignment = false;
+
     bool isAssignment(const string& input, int& i)
     {
         if (input.substr(0, 3) == "var")
@@ -330,11 +350,7 @@ class ResultOnScreen
 
     bool handleVariables(string& input, int& i, bool& assignment)
     {
-        string variableName;
-        while (i < input.length() && isalpha(input[i])) {
-            variableName += input[i];
-            i++;
-        }
+        string variableName = tokens.getVariableName(input, i);
         if (i < input.length())
         {
             if (input.substr(0, 3) != "var" && input[i] == '=' && i < input.size() && notation.isInContainer(variableName))
@@ -418,8 +434,7 @@ public:
         {
             cout << "Invalid input!" << endl;
             return;
-        }
-        
+        }      
         if (assignment)
         {           
             string variable_name = parts[0];
@@ -433,9 +448,7 @@ public:
             cout << "Echo: " << notation.GetResult(parts) << endl;
         }
     }
-
 };
-
 
 int main()
 {
