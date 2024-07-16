@@ -9,7 +9,7 @@ using namespace std;
 
 class Tokens
 {
-    string constructNumber(string& input, int& i)
+    string constructNumber(const string& input, int& i)
     {
         string current_number = "";
         if (input[i] == '-')
@@ -25,7 +25,7 @@ class Tokens
         return current_number;
     }
 
-    bool isFunction(string& input, int& i, vector<string>& tokens, bool& function)
+    bool isFunction(const string& input, int& i, vector<string>& tokens, bool& function)
     {
         for (int j = 0; j < 4; j++)
         {
@@ -42,7 +42,7 @@ class Tokens
     }
 
 public:
-    string getVariableName(string& input, int& i)
+    string getVariableName(const string& input, int& i)
     {
         string variable = "";
         while (i < input.length() && isalnum(input[i]))
@@ -55,19 +55,19 @@ public:
 
     const string functions[4] = { "pow", "abs", "min", "max" };
 
-    bool isFunction(string token)
+    bool isFunction(const string token)
     {
         return find(begin(functions), end(functions), token) != end(functions);
     }   
 
-    bool isOperator(char symbol)
+    bool isOperator(const char symbol)
     {
         return (symbol == '+' || symbol == '-' || symbol == '*' || symbol == '/' || symbol == '=');
     }
 
     bool function = false;
 
-    bool validateParentheses(vector<string>& tokens)
+    bool validateParentheses(const vector<string>& tokens)
     {
         stack<string> temp;
         int count = 0;
@@ -140,14 +140,14 @@ class ReversePolishNotation
     map<string, double>& container;
     Tokens tokens;
 
-    bool isDouble(string token)
+    bool isDouble(const string token)
     {
         char* end = nullptr;
         (void)strtod(token.c_str(), &end);
         return end != token.c_str() && *end == '\0';
     }
 
-    int Precedence(string oper)
+    int Precedence(const string oper)
     {
         if (oper == "-" || oper == "+")
             return 1;
@@ -158,7 +158,7 @@ class ReversePolishNotation
         return 0;
     }
 
-    double applyOperator(string oper, double number1, double number2)
+    double applyOperator(const string oper, const double number1, const double number2)
     {
         if (oper == "-")
         {return number2 - number1;}
@@ -186,12 +186,12 @@ class ReversePolishNotation
 public: 
     ReversePolishNotation(map<string, double>& cont) : container(cont) {}
 
-     bool isInContainer(string value)
+     bool isInContainer(const string value)
      {
          return  container.find(value) != container.end();
      }
 
-    queue<string> PostfixNotation(vector<string> tokens)
+    queue<string> PostfixNotation(const vector<string> tokens)
     {
         stack<string> callStack;
         queue<string> queueOutput;
@@ -244,7 +244,7 @@ public:
       return number;
   }
 
-  void applyOperatorAndPushBack(stack<string>& stackToCalculate, string token)
+  void applyOperatorAndPushBack(stack<string>& stackToCalculate, const string token)
   {
       if (token == "abs")
       {
@@ -283,7 +283,7 @@ public:
         return stod(stackToCalculate.top());
     }
 
-    double GetResult(vector<string>& tokens)
+    double GetResult(const vector<string>& tokens)
     {
         queue<string> postfix = PostfixNotation(tokens);
         return Calculate(postfix);
@@ -328,7 +328,7 @@ class ResultOnScreen
         return true;
     }
 
-    bool isFunction(string& input, int& i, int& abs, int& functionCount)
+    bool isFunction(const string& input, int& i, int& abs, int& functionCount)
     {
         for (int j = 0; j < 4; j++)
         {
@@ -348,7 +348,7 @@ class ResultOnScreen
         return false;
     }
 
-    bool handleVariables(string& input, int& i, bool& assignment)
+    bool handleVariables(const string& input, int& i, bool& assignment)
     {
         string variableName = tokens.getVariableName(input, i);
         if (i < input.length())
@@ -365,7 +365,7 @@ class ResultOnScreen
         return true;
     }
 
-    bool isValidSymbol(string& input, int& i)
+    bool isValidSymbol(const string& input, int& i)
     {
         return isdigit(input[i]) || isalpha(input[i]) || tokens.isOperator(input[i]) || input[i] == '(' || input[i] == ')' || input[i] == '.';
     }
